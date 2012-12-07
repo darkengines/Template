@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Template", "Template\Template.csproj", "{54816A4B-7DD9-4856-8394-F480F240E489}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarkEngines", "DarkEngines\DarkEngines.csproj", "{24FFCE46-F090-4B67-AC9D-3A786BA15B91}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{54816A4B-7DD9-4856-8394-F480F240E489}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54816A4B-7DD9-4856-8394-F480F240E489}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54816A4B-7DD9-4856-8394-F480F240E489}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54816A4B-7DD9-4856-8394-F480F240E489}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24FFCE46-F090-4B67-AC9D-3A786BA15B91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24FFCE46-F090-4B67-AC9D-3A786BA15B91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24FFCE46-F090-4B67-AC9D-3A786BA15B91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24FFCE46-F090-4B67-AC9D-3A786BA15B91}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
