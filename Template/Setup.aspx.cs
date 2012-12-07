@@ -18,7 +18,7 @@ namespace Template {
 
 		protected void btnGenerateUsers_Click(object sender, EventArgs e) {
 			string[] words = null;
-			using (var reader = new StreamReader(new FileStream(@"E:\Template\Template\Content\dico.txt", FileMode.Open, FileAccess.Read))) {
+			using (var reader = new StreamReader(new FileStream(@"D:\Template\Template\Content\dico.txt", FileMode.Open, FileAccess.Read))) {
 				string word = string.Empty;
 				int n = 0;
 				while ((word = reader.ReadLine()) != null) {
@@ -37,7 +37,7 @@ namespace Template {
 			i = 0;
 			var user = new Test();
 			var session = NHibernateHelper.GetCurrentSession();
-			while (i < 300000) {
+			while (i < 30000) {
 				rnd = generator.Next(words.Count());
 				user.Id = 0;
 				user.Name = words[rnd];

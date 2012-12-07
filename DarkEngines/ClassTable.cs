@@ -11,6 +11,7 @@ using System.Collections.ObjectModel;
 namespace DarkEngines {
 	public class ClassTable : CompositeControl {
 		public const int ITEM_PER_PAGE = 50;
+        public const int PAGE_INDEX = 0;
 		public ClassInfo classInfo;
 		private string filter {
 			get {
@@ -29,6 +30,18 @@ namespace DarkEngines {
 				ViewState["itemPerPage"] = value;
 			}
 		}
+        private int pageIndex
+        {
+            get
+            {
+                if (ViewState["pageIndex"] == null) return PAGE_INDEX;
+                return (int)ViewState["pageIndex"];
+            }
+            set
+            {
+                ViewState["pageIndex"] = value;
+            }
+        }
 		private IQueryable<object> datasource;
 		private bool rebuilding = false;
 		public IQueryable<object> DataSource {
@@ -94,7 +107,7 @@ namespace DarkEngines {
 
 				var paginationRow = new TableRow();
 				var itemCountCell = new TableCell();
-				itemCountCell.ColumnSpan = members.Count();
+				itemCountCell.ColumnSpan = members.Count()/2;
 				var lblItemCount = new Label();
 				lblItemCount.Text = "Item per page:";
 				var txtItemPerPage = new TextBox();
@@ -107,12 +120,41 @@ namespace DarkEngines {
 				itemCountCell.Controls.Add(txtItemPerPage);
 
 				paginationRow.Cells.Add(itemCountCell);
-				table.Rows.Add(paginationRow);
-
+                table.Rows.Add(paginationRow);
 			}
 			if (!Page.IsPostBack || rebuilding) {
+
+                var pageIndexCell = new TableCell();
+                pageIndexCell.HorizontalAlign = HorizontalAlign.Right;
+                pageIndexCell.ColumnSpan = members.Count() / 2;
+                var lblPageIndexPrefix = new Label();
+                var lblPageIndexSufix = new Label();
+                var ddlPageIndex = new DropDownList();
+                lblPageIndexPrefix.Text = "Page ";
+
+
+                lblPageIndexPrefix.AssociatedControlID = ddlPageIndex.ID;
+                lblPageIndexSufix.AssociatedControlID = ddlPageIndex.ID;
+
+                var tmpDatasource = filter == null ? datasource : datasource.Where(filter);
+                var itemCount = tmpDatasource.Count();
+                int pageCount = itemCount / itemPerPage;
+                if (itemCount % itemPerPage != 0) pageCount++;
+                lblPageIndexSufix.Text = string.Format("on {0}", pageCount);
+                ddlPageIndex.SelectedIndexChanged += ddlPageIndex_SelectedIndexChanged;
+                ddlPageIndex.Items.AddRange(Enumerable.Range(1, pageCount).Select(x => new ListItem(x.ToString(), (x-1).ToString())).ToArray());
+                ddlPageIndex.AutoPostBack = true;
+                ddlPageIndex.EnableViewState = true;
+                ddlPageIndex.SelectedIndex = pageIndex;
+
+                pageIndexCell.Controls.Add(lblPageIndexPrefix);
+                pageIndexCell.Controls.Add(ddlPageIndex);
+                pageIndexCell.Controls.Add(lblPageIndexSufix);
+
+                table.Rows[2].Cells.Add(pageIndexCell);
+
 				var dataSourceType = datasource.GetType().GetGenericArguments()[0];
-				foreach (var item in filter == null ? datasource.Take(itemPerPage) : datasource.Where(filter).Take(itemPerPage)) {
+				foreach (var item in tmpDatasource.Skip(itemPerPage * pageIndex).Take(itemPerPage)) {
 					var dataRow = new TableRow();
 					foreach (var member in members) {
 						var dataCell = new TableCell();
@@ -124,6 +166,11 @@ namespace DarkEngines {
 			}
 		}
 
+        void ddlPageIndex_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            pageIndex = int.Parse(((DropDownList)sender).SelectedValue);
+        }
+
 		void txtItemPerPage_TextChanged(object sender, EventArgs e) {
 			itemPerPage = int.Parse(((TextBox)sender).Text);
 		}
@@ -132,7 +179,8 @@ namespace DarkEngines {
 			base.OnPreRender(e);
 			if (Page.IsPostBack) {
 				rebuilding = true;
-				CreateChildControls();
+                ChildControlsCreated = false;
+                EnsureChildControls();
 			}
 		}
 
