@@ -15,6 +15,12 @@ namespace Template {
 			base.OnInit(e);
 			classTable.classInfo = classInfo;
 			classTable.DataSource = NHibernateHelper.GetCurrentSession().Query<Test>();
+			classTable.SaveOrUpdate +=classTable_SaveOrUpdate;
+		}
+
+		protected void classTable_SaveOrUpdate(object sender, DarkEngines.SaveOrUpdateEventArgs e) {
+			NHibernateHelper.GetCurrentSession().SaveOrUpdate(e.Item);
+			NHibernateHelper.GetCurrentSession().Flush();
 		}
 
 		protected void Page_Load(object sender, EventArgs e) {

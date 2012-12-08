@@ -21,7 +21,7 @@ namespace Template {
 	}
 	public class TestClassInfo : ClassInfo<Test> {
 		public TestClassInfo() {
-			Member(new MemberInfo<Test>(test => test.Id, new ClassTableIntegerTextboxProvider(), "Id", 0));
+			Member(new MemberInfo<Test>(test => test.Id, new ClassTableInteger64TextboxProvider(), "Id", 0));
 			Member(new MemberInfo<Test>(test => test.Name, new ClassTableStringTextboxProvider() , "Name", 1));
 			Filters<long?>(test => test.Id, IntegerFilters.Filters);
 			Filters<string>(test => test.Name, StringFilters.Filters);
