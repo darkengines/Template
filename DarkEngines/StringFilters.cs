@@ -12,8 +12,8 @@ namespace DarkEngines {
 			
 			filters.Add(new Filter((m, v) => string.Format("{0}.Contains(\"{1}\")", m, v), "Contain", "⊃", 0));
 			filters.Add(new Filter((m, v) => string.Format("{0}.Equals(\"{1}\")", m, v), "Equal", "=", 1));
-			filters.Add(new Filter((m, v) => string.Format("{0}.CompareTo(\"{1}\") < 1", m, v), "LessThan", "<", 2));
-			filters.Add(new Filter((m, v) => string.Format("{0}.CompareTo(\"{1}\") > 1", m, v), "GreaterThan", ">", 3));
+			//filters.Add(new Filter((m, v) => string.Format("{0}.CompareTo(\"{1}\") < 1", m, v), "LessThan", "<", 2));
+			//filters.Add(new Filter((m, v) => string.Format("{0}.CompareTo(\"{1}\") > 1", m, v), "GreaterThan", ">", 3));
 		}
 		public static IEnumerable<Filter> Filters {
 			get {

@@ -15,14 +15,19 @@ namespace DarkEngines {
 		public int Position = 0;
 		public Type Type = null;
 		public Collection<Filter> Filters = new Collection<Filter>();
-		public ClassTableEditor Editor;
+		protected IClassTableEditorProvider EditorProvider;
+		public ClassTableEditor Editor {
+			get {
+				return EditorProvider.GetNewEditor();
+			}
+		}
 	}
 	public class MemberInfo<T>: MemberInfo {
 		public Expression<Func<T, object>> Member;
-		
-		public MemberInfo(Expression<Func<T, object>> member, ClassTableEditor editor, string label, int position) {
+
+		public MemberInfo(Expression<Func<T, object>> member, IClassTableEditorProvider editor, string label, int position) {
 			Name = ExpressionHelper.MemberToString<T>(member);
-			Editor = editor;
+			EditorProvider = editor;
 			Type = member.GetType().GetGenericArguments()[0].GetGenericArguments()[1];
 			Member = member;
 			Position = position;

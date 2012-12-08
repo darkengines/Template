@@ -45,7 +45,11 @@
   <ItemGroup>
     <Compile Include="ClassInfo.cs" />
     <Compile Include="ClassTable.cs" />
+    <Compile Include="ClassTableEditorProvider.cs" />
+    <Compile Include="ClassTableEntityEditor.cs" />
     <Compile Include="ClassTableTextBox.cs" />
+    <Compile Include="ClassTableTextboxProvider.cs" />
+    <Compile Include="ClassTableIntegerTextboxProvider.cs" />
     <Compile Include="DynamicLinq.cs" />
     <Compile Include="ExpressionHelper.cs" />
     <Compile Include="Filter.cs" />

@@ -11,10 +11,10 @@ namespace DarkEngines {
 		private TextBox _textbox;
 		public ClassTableTextBox(Func<string, T> converter) {
 			Converter = converter;
+			_textbox = new TextBox();
 		}
 		protected override void CreateChildControls() {
 			base.CreateChildControls();
-			_textbox = new TextBox();
 			Controls.Add(_textbox);
 			EnableViewState = true;
 			_textbox.AutoPostBack = true;
@@ -35,6 +35,9 @@ namespace DarkEngines {
 		}
 		public object GetValue() {
 			return Converter(_textbox.Text);
+		}
+		public void SetValue(object value) {
+			_textbox.Text = value.ToString();
 		}
 	}
 }

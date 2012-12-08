@@ -18,7 +18,7 @@ namespace DarkEngines {
 		public void Member(MemberInfo<T> memberInfo) {
 			Members.Add(memberInfo);
 		}
-		public void Member(Expression<Func<T, object>> member, ClassTableEditor editor, string label, int position) {
+		public void Member(Expression<Func<T, object>> member, IClassTableEditorProvider editor, string label, int position) {
 			Members.Add(new MemberInfo<T>(member, editor, label, position));
 		}
 		public void Filter<MT>(Expression<Func<T, MT>> member, Filter filter) {

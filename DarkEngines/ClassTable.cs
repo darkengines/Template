@@ -13,6 +13,11 @@ namespace DarkEngines {
 		public const int ITEM_PER_PAGE = 50;
         public const int PAGE_INDEX = 0;
 		public ClassInfo classInfo;
+		private IQueryable<object> filteredDatasource {
+			get {
+				return filter == null ? datasource : datasource.Where(filter);
+			}
+		}
 		private string filter {
 			get {
 				return (string)ViewState["filter"];
@@ -52,8 +57,10 @@ namespace DarkEngines {
 		public Table table;
 		protected Collection<DropDownList> ddlFilters = new Collection<DropDownList>();
 		protected Collection<ClassTableEditor> editors = new Collection<ClassTableEditor>();
+		protected DropDownList ddlPageIndex;
+		protected Label lblPageIndexSufix;
 		public event EventHandler<FilterChangedEventArgs> FilterChanged;
-
+		protected bool refreshIndices = false;
 		protected DropDownList ddlPage;
 
 		protected override void OnLoad(EventArgs e) {
@@ -66,6 +73,13 @@ namespace DarkEngines {
 					ddlFilters[i].DataBind();
 					i++;
 				}
+				var itemCount = filteredDatasource.Count();
+				int pageCount = itemCount / itemPerPage;
+				if (itemCount % itemPerPage != 0) pageCount++;
+				lblPageIndexSufix.Text = string.Format("on {0}", pageCount);
+				ddlPageIndex.DataSource = Enumerable.Range(1, pageCount).Select(x => new { Label = x.ToString(), Value = (x - 1).ToString() }).ToArray();
+				ddlPageIndex.SelectedIndex = pageIndex;
+				ddlPageIndex.DataBind();
 			}
 		}
 		protected override void CreateChildControls() {
@@ -106,62 +120,62 @@ namespace DarkEngines {
 				table.Rows.Add(filterRow);
 
 				var paginationRow = new TableRow();
+				paginationRow.EnableViewState = true;
 				var itemCountCell = new TableCell();
+				itemCountCell.EnableViewState = true;
 				itemCountCell.ColumnSpan = members.Count()/2;
 				var lblItemCount = new Label();
 				lblItemCount.Text = "Item per page:";
 				var txtItemPerPage = new TextBox();
-				txtItemPerPage.EnableViewState = true;
-				lblItemCount.AssociatedControlID = txtItemPerPage.ID;
-				txtItemPerPage.AutoPostBack = true;
-				txtItemPerPage.TextChanged += txtItemPerPage_TextChanged;
-
 				itemCountCell.Controls.Add(lblItemCount);
 				itemCountCell.Controls.Add(txtItemPerPage);
+				txtItemPerPage.EnableViewState = true;
+				txtItemPerPage.AutoPostBack = true;
+				lblItemCount.AssociatedControlID = txtItemPerPage.ID;
+				
+				txtItemPerPage.TextChanged += txtItemPerPage_TextChanged;
+
+				
 
 				paginationRow.Cells.Add(itemCountCell);
+
+				var pageIndexCell = new TableCell();
+				pageIndexCell.EnableViewState = true;
+				pageIndexCell.HorizontalAlign = HorizontalAlign.Right;
+				pageIndexCell.ColumnSpan = members.Count() / 2;
+
+				var lblPageIndexPrefix = new Label();
+				lblPageIndexPrefix.Text = "Page ";
+
+				lblPageIndexSufix = new Label();
+				var ddlPageIndex = new DropDownList();
+				this.ddlPageIndex = ddlPageIndex;
+				pageIndexCell.Controls.Add(ddlPageIndex);
+				ddlPageIndex.AutoPostBack = true;
+				ddlPageIndex.EnableViewState = true;
+				ddlPageIndex.DataTextField = "Label";
+				ddlPageIndex.DataValueField = "Value";
+				ddlPageIndex.SelectedIndexChanged += new EventHandler(ddlPageIndex_SelectedIndexChanged);
+
+				lblPageIndexPrefix.AssociatedControlID = ddlPageIndex.ID;
+				lblPageIndexSufix.AssociatedControlID = ddlPageIndex.ID;
+
+				pageIndexCell.Controls.Add(lblPageIndexPrefix);
+				paginationRow.Cells.Add(pageIndexCell);
+				pageIndexCell.Controls.Add(lblPageIndexSufix);
+
                 table.Rows.Add(paginationRow);
 			}
-			if (!Page.IsPostBack || rebuilding) {
-
-                var pageIndexCell = new TableCell();
-                pageIndexCell.HorizontalAlign = HorizontalAlign.Right;
-                pageIndexCell.ColumnSpan = members.Count() / 2;
-                var lblPageIndexPrefix = new Label();
-                var lblPageIndexSufix = new Label();
-                var ddlPageIndex = new DropDownList();
-                lblPageIndexPrefix.Text = "Page ";
-
-
-                lblPageIndexPrefix.AssociatedControlID = ddlPageIndex.ID;
-                lblPageIndexSufix.AssociatedControlID = ddlPageIndex.ID;
-
-                var tmpDatasource = filter == null ? datasource : datasource.Where(filter);
-                var itemCount = tmpDatasource.Count();
-                int pageCount = itemCount / itemPerPage;
-                if (itemCount % itemPerPage != 0) pageCount++;
-                lblPageIndexSufix.Text = string.Format("on {0}", pageCount);
-                ddlPageIndex.SelectedIndexChanged += ddlPageIndex_SelectedIndexChanged;
-                ddlPageIndex.Items.AddRange(Enumerable.Range(1, pageCount).Select(x => new ListItem(x.ToString(), (x-1).ToString())).ToArray());
-                ddlPageIndex.AutoPostBack = true;
-                ddlPageIndex.EnableViewState = true;
-                ddlPageIndex.SelectedIndex = pageIndex;
-
-                pageIndexCell.Controls.Add(lblPageIndexPrefix);
-                pageIndexCell.Controls.Add(ddlPageIndex);
-                pageIndexCell.Controls.Add(lblPageIndexSufix);
-
-                table.Rows[2].Cells.Add(pageIndexCell);
-
+			if (!Page.IsPostBack || rebuilding) {                
 				var dataSourceType = datasource.GetType().GetGenericArguments()[0];
-				foreach (var item in tmpDatasource.Skip(itemPerPage * pageIndex).Take(itemPerPage)) {
+				foreach (var item in filteredDatasource.Skip(itemPerPage * pageIndex).Take(itemPerPage)) {
 					var dataRow = new TableRow();
 					foreach (var member in members) {
 						var dataCell = new TableCell();
 						dataCell.Text = dataSourceType.GetProperty(member.Name).GetValue(item, new object[] { }).ToString();
 						dataRow.Cells.Add(dataCell);
 					}
-					table.Rows.AddAt(2, dataRow);
+					table.Rows.Add(dataRow);
 				}
 			}
 		}
@@ -173,15 +187,25 @@ namespace DarkEngines {
 
 		void txtItemPerPage_TextChanged(object sender, EventArgs e) {
 			itemPerPage = int.Parse(((TextBox)sender).Text);
+			refreshIndices = true;
 		}
 
 		protected override void OnPreRender(EventArgs e) {
 			base.OnPreRender(e);
 			if (Page.IsPostBack) {
 				rebuilding = true;
-                ChildControlsCreated = false;
-                EnsureChildControls();
+				CreateChildControls();
 			}
+			if (refreshIndices) {
+				var itemCount = filteredDatasource.Count();
+				int pageCount = itemCount / itemPerPage;
+				if (itemCount % itemPerPage != 0) pageCount++;
+				lblPageIndexSufix.Text = string.Format("on {0}", pageCount == 0 ? 1 : pageCount);
+				ddlPageIndex.DataSource = Enumerable.Range(1, pageCount == 0 ? 1 : pageCount).Select(x => new { Label = x.ToString(), Value = (x - 1).ToString() }).ToArray();
+				ddlPageIndex.SelectedIndex = pageIndex;
+				ddlPageIndex.DataBind();
+			}
+				
 		}
 
 		protected void OnFilterChanged(object sender, EventArgs e) {
@@ -198,6 +222,7 @@ namespace DarkEngines {
 			var request = string.Empty;
 			var filters = result.Select(tuple => classInfo.CreateFilter(tuple.Item1, tuple.Item2, tuple.Item3 == null ? string.Empty : tuple.Item3.ToString())).Where(f => !string.IsNullOrEmpty(f));
 			filter = string.Join(" AND ", filters);
+			refreshIndices = true;
 		}
 
 		void ddlFilter_SelectedIndexChanged(object sender, EventArgs e) {

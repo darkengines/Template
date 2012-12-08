@@ -23,5 +23,9 @@ namespace DarkEngines {
 			var name = memberExpression.Member.Name;
 			return name;
 		}
+		public static object ObjectFromMemberName(object item, string memberName) {
+			var type = item.GetType();
+			return type.GetProperty(memberName).GetValue(item, null);
+		}
 	}
 }

@@ -7,5 +7,6 @@ namespace DarkEngines {
 	public interface ClassTableEditor {
 		event EventHandler<ValueChangedEventArgs> ValueChanged;
 		object GetValue();
+		void SetValue(object value);
 	}
 }
