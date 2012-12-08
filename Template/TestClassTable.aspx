@@ -3,5 +3,4 @@
 </asp:Content>
 <asp:Content ID="testClassTableContent" ContentPlaceHolderID="content" runat="server">
     <de:ClassTable runat="server" Id="classTable" />
-    <de:ClassTableEntityEditor runat="server" Id="entityEditor" />
 </asp:Content>

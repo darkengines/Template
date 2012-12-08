@@ -15,9 +15,6 @@ namespace Template {
 			base.OnInit(e);
 			classTable.classInfo = classInfo;
 			classTable.DataSource = NHibernateHelper.GetCurrentSession().Query<Test>();
-			entityEditor.Entity = NHibernateHelper.GetCurrentSession().Query<Test>().First();
-			entityEditor.ClassInfo = classInfo;
-			entityEditor.Columns = 2;
 		}
 
 		protected void Page_Load(object sender, EventArgs e) {
