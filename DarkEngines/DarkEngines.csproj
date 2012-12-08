@@ -50,6 +50,7 @@
     <Compile Include="ClassTableTextBox.cs" />
     <Compile Include="ClassTableTextboxProvider.cs" />
     <Compile Include="ClassTableIntegerTextboxProvider.cs" />
+    <Compile Include="ClassTableInteger64TextboxProvider.cs" />
     <Compile Include="DynamicLinq.cs" />
     <Compile Include="ExpressionHelper.cs" />
     <Compile Include="Filter.cs" />
@@ -58,6 +59,7 @@
     <Compile Include="MemberInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ClassTableEditor.cs" />
+    <Compile Include="SaveOrUpdateEventArgs.cs" />
     <Compile Include="StringFilters.cs" />
     <Compile Include="ValueChangedEventArgs.cs" />
   </ItemGroup>

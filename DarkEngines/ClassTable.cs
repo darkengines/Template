@@ -12,9 +12,10 @@ namespace DarkEngines
 {
     public class ClassTable : CompositeControl
     {
-        public const int ITEM_PER_PAGE = 50;
+        public const int ITEM_PER_PAGE = 25;
         public const int PAGE_INDEX = 0;
         public ClassInfo classInfo;
+		public event EventHandler<SaveOrUpdateEventArgs> SaveOrUpdate;
         private IQueryable<object> filteredDatasource
         {
             get
@@ -142,6 +143,7 @@ namespace DarkEngines
                     ddlFilter.DataTextField = "Label";
                     ddlFilter.DataValueField = "Name";
                     var editor = member.Editor;
+					editor.SetAutoPostBack(true);
                     filterCell.Controls.Add(ddlFilter);
                     filterCell.Controls.Add((Control)editor);
                     ddlFilters.Add(ddlFilter);
@@ -182,6 +184,7 @@ namespace DarkEngines
                         entityEditor.EnableViewState = true;
                         entityEditor.ID = "entityEditor";
                         entityEditor.ClassInfo = classInfo;
+						entityEditor.SaveOrUpdate += entityEditor_SaveOrUpdate;
                         entityEditor.Columns = classInfo.Members.Count() + 1;
                         editorCell.ColumnSpan = classInfo.Members.Count() + 1;
                         editorCell.Controls.Add(entityEditor);
@@ -269,6 +272,11 @@ namespace DarkEngines
                 }
         }
 
+		void entityEditor_SaveOrUpdate(object sender, SaveOrUpdateEventArgs e) {
+			SaveOrUpdate(this, e);
+			editItemId = -1;
+		}
+
         protected override void LoadViewState(object savedState)
         {
             base.LoadViewState(savedState);
@@ -282,12 +290,14 @@ namespace DarkEngines
         void ddlPageIndex_SelectedIndexChanged(object sender, EventArgs e)
         {
             pageIndex = int.Parse(((DropDownList)sender).SelectedValue);
+			editItemId = -1;
         }
 
         void txtItemPerPage_TextChanged(object sender, EventArgs e)
         {
             itemPerPage = int.Parse(((TextBox)sender).Text);
             refreshIndices = true;
+			editItemId = -1;
         }
 
         protected override void OnPreRender(EventArgs e)
@@ -328,11 +338,13 @@ namespace DarkEngines
             var filters = result.Select(tuple => classInfo.CreateFilter(tuple.Item1, tuple.Item2, tuple.Item3 == null ? string.Empty : tuple.Item3.ToString())).Where(f => !string.IsNullOrEmpty(f));
             filter = string.Join(" AND ", filters);
             refreshIndices = true;
+			editItemId = -1;
         }
 
         void ddlFilter_SelectedIndexChanged(object sender, EventArgs e)
         {
             OnFilterChanged(sender, e);
+			editItemId = -1;
         }
 
         protected void editor_ValueChanged(object sender, ValueChangedEventArgs e)

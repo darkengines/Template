@@ -17,12 +17,17 @@ namespace DarkEngines {
 			base.CreateChildControls();
 			Controls.Add(_textbox);
 			EnableViewState = true;
-			_textbox.AutoPostBack = true;
 			_textbox.TextChanged += new EventHandler(_textbox_TextChanged);
 		}
 
+		public void SetAutoPostBack(bool value) {
+			_textbox.AutoPostBack = value;
+		}
+
 		void _textbox_TextChanged(object sender, EventArgs e) {
-			ValueChanged(this, new ValueChangedEventArgs(Converter(_textbox.Text)));
+			if (ValueChanged != null) {
+				ValueChanged(this, new ValueChangedEventArgs(Converter(_textbox.Text)));
+			}
 		}
 
 		protected override void Render(System.Web.UI.HtmlTextWriter writer) {

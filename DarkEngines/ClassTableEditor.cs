@@ -8,5 +8,6 @@ namespace DarkEngines {
 		event EventHandler<ValueChangedEventArgs> ValueChanged;
 		object GetValue();
 		void SetValue(object value);
+		void SetAutoPostBack(bool value);
 	}
 }

@@ -8,6 +8,7 @@ using System.Web.UI.WebControls;
 namespace DarkEngines {
 	public class ClassTableEntityEditor: CompositeControl {
 		public Table table;
+		public event EventHandler<SaveOrUpdateEventArgs> SaveOrUpdate;
 		public int Columns {
 			get;
 			set;
@@ -51,11 +52,11 @@ namespace DarkEngines {
 				var lblEditor = new Label();
 				lblEditor.Text = member.Label;
 				var editor = member.Editor;
+				editor.SetAutoPostBack(false);
 				editor.SetValue(ExpressionHelper.ObjectFromMemberName(Entity, member.Name));
 				fieldEditorMap.Add(member.Name, editor);
 				labelCell.Controls.Add(lblEditor);
 				editorCell.Controls.Add((Control)editor);
-				editor.ValueChanged += new EventHandler<ValueChangedEventArgs>(editor_ValueChanged);
 				editorRow.Cells.Add(labelCell);
 				editorRow.Cells.Add(editorCell);
 				i++;
@@ -74,11 +75,10 @@ namespace DarkEngines {
 		}
 
 		void btnSave_Click(object sender, EventArgs e) {
-			throw new NotImplementedException();
-		}
-
-		private void editor_ValueChanged(object sender, ValueChangedEventArgs e) {
-			throw new NotImplementedException();
+			foreach (var member in ClassInfo.Members) {
+				ExpressionHelper.ObjectToMemberName(Entity, member.Name, fieldEditorMap[member.Name].GetValue());
+			}
+			SaveOrUpdate(this, new SaveOrUpdateEventArgs(Entity));
 		}
 
 		protected override void Render(HtmlTextWriter writer) {
