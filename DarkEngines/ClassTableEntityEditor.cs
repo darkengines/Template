@@ -53,7 +53,10 @@ namespace DarkEngines {
 				lblEditor.Text = member.Label;
 				var editor = member.Editor;
 				editor.SetAutoPostBack(false);
-				editor.SetValue(ExpressionHelper.ObjectFromMemberName(Entity, member.Name));
+                if (Entity != null)
+                {
+                    editor.SetValue(ExpressionHelper.ObjectFromMemberName(Entity, member.Name));
+                }
 				fieldEditorMap.Add(member.Name, editor);
 				labelCell.Controls.Add(lblEditor);
 				editorCell.Controls.Add((Control)editor);

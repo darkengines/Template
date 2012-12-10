@@ -16,11 +16,26 @@ namespace DarkEngines
         public const int PAGE_INDEX = 0;
         public ClassInfo classInfo;
 		public event EventHandler<SaveOrUpdateEventArgs> SaveOrUpdate;
+        public event EventHandler<DeleteEventArgs> Delete;
         private IQueryable<object> filteredDatasource
         {
             get
             {
-                return filter == null ? datasource : datasource.Where(filter);
+                if (filter == null && !sortList.Any())
+                {
+                    return datasource.Skip(itemPerPage * pageIndex).Take(itemPerPage);
+                } else {
+                    IQueryable<object> result = datasource;
+                    if (filter != null)
+                    {
+                        result = datasource.Where(filter);
+                    }
+                    if (sortList.Any())
+                    {
+                        result = result.OrderBy(string.Join(", ", sortList.Select(item => item.ToString())));
+                    }
+                    return result.Skip(itemPerPage * pageIndex).Take(itemPerPage);
+                }
             }
         }
         private string filter
@@ -44,6 +59,18 @@ namespace DarkEngines
             set
             {
                 ViewState["editItemId"] = value;
+            }
+        }
+        private bool createNew
+        {
+            get
+            {
+                if (ViewState["createNew"] == null) return false;
+                return (bool)ViewState["createNew"];
+            }
+            set
+            {
+                ViewState["createNew"] = value;
             }
         }
         private int itemPerPage
@@ -87,6 +114,22 @@ namespace DarkEngines
         public event EventHandler<FilterChangedEventArgs> FilterChanged;
         protected bool refreshIndices = false;
         protected DropDownList ddlPage;
+        protected List<SortInfo> sortList
+        {
+            get
+            {
+                if (ViewState["sortList"] == null)
+                {
+                    var list = new List<SortInfo>();
+                    ViewState["sortList"] = list;
+                    return list;
+                }
+                else
+                {
+                    return (List<SortInfo>)ViewState["sortList"];
+                }
+            }
+        }
 
         protected override void OnLoad(EventArgs e)
         {
@@ -120,10 +163,18 @@ namespace DarkEngines
                 Controls.Add(table);
                 table.EnableViewState = true;
                 var headerRow = new TableRow();
+                headerRow.EnableViewState = true;
                 foreach (var member in members)
                 {
                     var headerCell = new TableHeaderCell();
-                    headerCell.Text = member.Label;
+                    headerCell.EnableViewState = true;
+                    var lnkButtonSort = new LinkButton();
+                    lnkButtonSort.Attributes["data"] = member.Name;
+                    lnkButtonSort.EnableViewState = true;
+                    lnkButtonSort.ID = string.Format("sortButton_{0}", member.Name);
+                    lnkButtonSort.Text = member.Label;
+                    lnkButtonSort.Click += lnkButtonSort_Click;
+                    headerCell.Controls.Add(lnkButtonSort); 
                     headerRow.Cells.Add(headerCell);
                 }
                 var actionsHeaderCell = new TableHeaderCell();
@@ -154,24 +205,48 @@ namespace DarkEngines
                     ddlFilter.AutoPostBack = true;
                     filterRow.Cells.Add(filterCell);
                 }
-                filterRow.Cells.Add(new TableCell());
+
+                var buttonNewEntry = new LinkButton();
+                buttonNewEntry.EnableViewState = true;
+                buttonNewEntry.Text = "New entry";
+                buttonNewEntry.Click += buttonNewEntry_Click;
+
+                var cellNewEntry = new TableCell();
+                cellNewEntry.Controls.Add(buttonNewEntry);
+
+                filterRow.Cells.Add(cellNewEntry);
                 table.Rows.Add(filterRow);
 
                 
             }
+            
                 if (rebuilding)
                 {
-                    int y = 2;
+                    int y = createNew ? 3 : 2;
                     int count = table.Rows.Count-1;
                     while (y < count)
                     {
-                        table.Rows.RemoveAt(2);
+                        table.Rows.RemoveAt(createNew ? 3 : 2);
                         y++;
                     }
                 }
+                if (createNew)
+                {
+                    var createNewRow = new TableRow();
+                    var createNewCell = new TableCell();
+                    createNewCell.ColumnSpan = members.Count() + 1;
+                    var newEntityEditor = new ClassTableEntityEditor();
+                    newEntityEditor.ClassInfo = classInfo;
+                    newEntityEditor.Columns = members.Count() + 1;
+                    newEntityEditor.SaveOrUpdate += entityEditor_SaveOrUpdate;
+
+                    createNewCell.Controls.Add(newEntityEditor);
+                    createNewRow.Cells.Add(createNewCell);
+                    table.Rows.Add(createNewRow);
+                }
                 var dataSourceType = datasource.GetType().GetGenericArguments()[0];
                 int i = 0;
-                foreach (var item in filteredDatasource.Skip(itemPerPage * pageIndex).Take(itemPerPage))
+                foreach (var item in filteredDatasource)
                 {
                     var dataRow = new TableRow();
                     dataRow.EnableViewState = true;
@@ -207,7 +282,17 @@ namespace DarkEngines
                         btnLnkEdit.Click += btnLnkEdit_Click;
                         btnLnkEdit.EnableViewState = true;
                         actionCell.Controls.Add(btnLnkEdit);
+
+                        var btnLnkDelete = new LinkButton();
+                        btnLnkDelete.ID = string.Format("deleteButton_{0}", i);
+                        btnLnkDelete.Text = "Delete";
+                        btnLnkDelete.Attributes["data"] = ExpressionHelper.ObjectFromMemberName(item, "Id").ToString();
+                        btnLnkDelete.Click += btnLnkDelete_Click;
+                        btnLnkDelete.EnableViewState = true;
+                        actionCell.Controls.Add(btnLnkDelete);
+
                         dataRow.Cells.Add(actionCell);
+
                     }
 
                     if (rebuilding)
@@ -270,6 +355,36 @@ namespace DarkEngines
 
                     table.Rows.Add(paginationRow);
                 }
+        }
+
+        void buttonNewEntry_Click(object sender, EventArgs e)
+        {
+            createNew = true;
+        }
+
+        void btnLnkDelete_Click(object sender, EventArgs e)
+        {
+            var f = string.Format("Id = {0}", ((LinkButton)sender).Attributes["data"]);
+            Delete(this, new DeleteEventArgs(datasource.Where(f).ToArray().First()));
+        }
+
+        void lnkButtonSort_Click(object sender, EventArgs e)
+        {
+            var column = ((LinkButton)sender).Attributes["data"];
+            var order = "DESC";
+            var sortInfo = sortList.FirstOrDefault(item => item.Member == column);
+            if (sortInfo == null)
+            {
+                sortList.Insert(0, new SortInfo(column, order));
+            } else {
+                sortList.Remove(sortInfo);
+                if (sortInfo.Order == "ASC") {
+                    sortInfo.Order = "DESC";
+                } else {
+                    sortInfo.Order = "ASC";
+                }
+                sortList.Insert(0, sortInfo);
+            }
         }
 
 		void entityEditor_SaveOrUpdate(object sender, SaveOrUpdateEventArgs e) {
