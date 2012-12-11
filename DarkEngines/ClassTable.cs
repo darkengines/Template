@@ -155,6 +155,7 @@ namespace DarkEngines
         }
         protected override void CreateChildControls()
         {
+			var dataSourceType = datasource.GetType().GetGenericArguments()[0];
             var members = classInfo.Members.OrderBy(m => m.Position);
             if (!rebuilding)
             {
@@ -216,35 +217,37 @@ namespace DarkEngines
 
                 filterRow.Cells.Add(cellNewEntry);
                 table.Rows.Add(filterRow);
-
-                
             }
             
                 if (rebuilding)
                 {
-                    int y = createNew ? 3 : 2;
+                    int y = 2;
                     int count = table.Rows.Count-1;
                     while (y < count)
                     {
-                        table.Rows.RemoveAt(createNew ? 3 : 2);
+                        table.Rows.RemoveAt(2);
                         y++;
                     }
-                }
-                if (createNew)
-                {
-                    var createNewRow = new TableRow();
-                    var createNewCell = new TableCell();
-                    createNewCell.ColumnSpan = members.Count() + 1;
-                    var newEntityEditor = new ClassTableEntityEditor();
-                    newEntityEditor.ClassInfo = classInfo;
-                    newEntityEditor.Columns = members.Count() + 1;
-                    newEntityEditor.SaveOrUpdate += entityEditor_SaveOrUpdate;
+					if (createNew) {
+						var createNewRow = new TableRow();
+						createNewRow.EnableViewState = true;
+						var createNewCell = new TableCell();
+						createNewCell.EnableViewState = true;
+						createNewCell.ColumnSpan = members.Count() + 1;
+						var newEntityEditor = new ClassTableEntityEditor();
+						newEntityEditor.EnableViewState = true;
+						newEntityEditor.ClassInfo = classInfo;
+						newEntityEditor.ID = "newEntityEditor";
+						newEntityEditor.Entity = Activator.CreateInstance(dataSourceType);
+						newEntityEditor.Columns = members.Count() + 1;
+						newEntityEditor.SaveOrUpdate += entityEditor_SaveOrUpdate;
 
-                    createNewCell.Controls.Add(newEntityEditor);
-                    createNewRow.Cells.Add(createNewCell);
-                    table.Rows.Add(createNewRow);
+						createNewCell.Controls.Add(newEntityEditor);
+						createNewRow.Cells.Add(createNewCell);
+						table.Rows.Add(createNewRow);
+					}
                 }
-                var dataSourceType = datasource.GetType().GetGenericArguments()[0];
+                
                 int i = 0;
                 foreach (var item in filteredDatasource)
                 {
@@ -297,7 +300,7 @@ namespace DarkEngines
 
                     if (rebuilding)
                     {
-                        table.Rows.AddAt(i + 2, dataRow);
+                        table.Rows.AddAt(i + 3, dataRow);
                     }
                     else
                     {
@@ -354,6 +357,25 @@ namespace DarkEngines
                     pageIndexCell.Controls.Add(lblPageIndexSufix);
 
                     table.Rows.Add(paginationRow);
+
+					if (createNew) {
+						var createNewRow = new TableRow();
+						createNewRow.EnableViewState = true;
+						var createNewCell = new TableCell();
+						createNewCell.EnableViewState = true;
+						createNewCell.ColumnSpan = members.Count() + 1;
+						var newEntityEditor = new ClassTableEntityEditor();
+						newEntityEditor.EnableViewState = true;
+						newEntityEditor.Entity = Activator.CreateInstance(dataSourceType);
+						newEntityEditor.ClassInfo = classInfo;
+						newEntityEditor.ID = "newEntityEditor";
+						newEntityEditor.Columns = members.Count() + 1;
+						newEntityEditor.SaveOrUpdate += entityEditor_SaveOrUpdate;
+
+						createNewCell.Controls.Add(newEntityEditor);
+						createNewRow.Cells.Add(createNewCell);
+						table.Rows.Add(createNewRow);
+					}
                 }
         }
 

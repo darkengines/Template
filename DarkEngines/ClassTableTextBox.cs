@@ -42,7 +42,7 @@ namespace DarkEngines {
 			return Converter(_textbox.Text);
 		}
 		public void SetValue(object value) {
-			_textbox.Text = value.ToString();
+			_textbox.Text = value == null ? null : value.ToString();
 		}
 	}
 }
